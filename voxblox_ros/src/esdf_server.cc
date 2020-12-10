@@ -1,5 +1,6 @@
-#include "voxblox_ros/esdf_server.h"
+#include <geometry_msgs/PointStamped.h>
 
+#include "voxblox_ros/esdf_server.h"
 #include "voxblox_ros/conversions.h"
 #include "voxblox_ros/ros_params.h"
 
@@ -27,7 +28,8 @@ EsdfServer::EsdfServer(const ros::NodeHandle& nh,
       publish_traversable_(false),
       traversability_radius_(1.0),
       incremental_update_(true),
-      num_subscribers_esdf_map_(0) {
+      num_subscribers_esdf_map_(0),
+      transformer_(nh, nh_private) {
   // Set up map and integrator.
   esdf_map_.reset(new EsdfMap(esdf_config));
   esdf_integrator_.reset(new EsdfIntegrator(esdf_integrator_config,
@@ -114,6 +116,36 @@ bool EsdfServer::generateEsdfCallback(
   publishAllUpdatedEsdfVoxels();
   publishSlices();
   return true;
+}
+
+
+bool EsdfServer::computeSignedDistanceCallback(voxblox_msgs::SignedDistance::Request& request, 
+                                               voxblox_msgs::SignedDistance::Response& response) {
+  int nx = request.nx;
+  int ny = request.ny;
+  int nz = request.nz;
+  double dx = request.dx;
+  geometry_msgs::PointStamped& pt_stamped_msg = request.origin;
+
+  std::string frame_id = request.origin.header.frame_id;
+  Transformation transform;
+  transformer_.lookupTransform(frame_id, world_frame_, 
+      pt_stamped_msg.header.stamp,
+      &transform);
+  Eigen::Vector3f p_; 
+  p_ << pt_stamped_msg.point.x, pt_stamped_msg.point.y, pt_stamped_msg.point.z;
+  const auto p_world = transform.transform(p_).cast<double>();
+  double* msg_data_ptr = response.data.data();
+
+  for(size_t i=0; i<nx; i++){
+    for(size_t j=0; j<ny; j++){
+      for(size_t k=0; k<nz; k++){
+        int idx = i * (ny * nz) + j * nz + k;
+        auto p_grid = p_world;
+        esdf_map_->getDistanceAtPosition(p_grid, &msg_data_ptr[idx]);
+      }
+    }
+  }
 }
 
 void EsdfServer::updateEsdfEvent(const ros::TimerEvent& /*event*/) {

@@ -7,8 +7,10 @@
 #include <voxblox/core/esdf_map.h>
 #include <voxblox/integrator/esdf_integrator.h>
 #include <voxblox_msgs/Layer.h>
+#include <voxblox_msgs/SignedDistance.h>
 
 #include "voxblox_ros/tsdf_server.h"
+#include "voxblox_ros/transformer.h"
 
 namespace voxblox {
 
@@ -27,6 +29,9 @@ class EsdfServer : public TsdfServer {
 
   bool generateEsdfCallback(std_srvs::Empty::Request& request,     // NOLINT
                             std_srvs::Empty::Response& response);  // NOLINT
+  bool computeSignedDistanceCallback(voxblox_msgs::SignedDistance::Request& request, 
+                                   voxblox_msgs::SignedDistance::Response& response);
+
 
   void publishAllUpdatedEsdfVoxels();
   virtual void publishSlices();
@@ -91,9 +96,16 @@ class EsdfServer : public TsdfServer {
 
   /// Services.
   ros::ServiceServer generate_esdf_srv_;
+  ros::ServiceServer compute_sighed_distance_srv_;
 
   /// Timers.
   ros::Timer update_esdf_timer_;
+
+  /**
+   * Transformer object to keep track of either TF transforms or messages from
+   * a transform topic.
+   */
+  Transformer transformer_;
 
   bool clear_sphere_for_planning_;
   bool publish_esdf_map_;

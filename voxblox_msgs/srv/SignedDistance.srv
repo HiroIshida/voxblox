@@ -1,0 +1,8 @@
+geometry_msgs/PointStamped origin
+int32 nx
+int32 ny
+int32 nz
+float32 dx
+---
+float64[] data
+
