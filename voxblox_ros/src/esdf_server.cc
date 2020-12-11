@@ -138,14 +138,16 @@ bool EsdfServer::computeSignedDistanceCallback(voxblox_msgs::SignedDistance::Req
   Eigen::Vector3f p_; 
   p_ << pt_stamped_msg.point.x, pt_stamped_msg.point.y, pt_stamped_msg.point.z;
   const auto p_world = transform.transform(p_).cast<double>();
-  double* msg_data_ptr = response.data.data();
 
   for(size_t i=0; i<nx; i++){
     for(size_t j=0; j<ny; j++){
       for(size_t k=0; k<nz; k++){
         int idx = i * (ny * nz) + j * nz + k;
         auto p_grid = p_world;
-        esdf_map_->getDistanceAtPosition(p_grid, &msg_data_ptr[idx]);
+        double dist;
+        esdf_map_->getDistanceAtPosition(p_grid, &dist);
+        response.data.push_back(dist);
+
       }
     }
   }
