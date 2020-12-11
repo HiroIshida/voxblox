@@ -24,6 +24,10 @@
     <rosparam file="$(find voxblox_ros)/cfg/cow_and_lady.yaml"/>
     <param name="mesh_filename" value="$(find voxblox_ros)/mesh_results/$(anon cow).ply" />
     <param name="publish_pointclouds" value="true" />
+
+    <param name="nx" value="5" />
+    <param name="ny" value="5" />
+    <param name="nz" value="5" />
   </node>
 
 </launch>

@@ -30,6 +30,14 @@ EsdfServer::EsdfServer(const ros::NodeHandle& nh,
       traversability_radius_(1.0),
       incremental_update_(true),
       num_subscribers_esdf_map_(0),
+      origin_x_(0.0),
+      origin_y_(0.0),
+      origin_z_(0.0),
+      nx_(20),
+      ny_(20),
+      nz_(20),
+      dx_(0.2),
+      frame_id_(std::string("world_frame_")),
       transformer_(nh, nh_private) {
   // Set up map and integrator.
   esdf_map_.reset(new EsdfMap(esdf_config));
@@ -79,6 +87,16 @@ void EsdfServer::setupRos() {
   double update_esdf_every_n_sec = 1.0;
   nh_private_.param("update_esdf_every_n_sec", update_esdf_every_n_sec,
                     update_esdf_every_n_sec);
+
+  // parameter for sd_array publisher
+  nh_private_.param("origin_x", origin_x_, origin_x_);
+  nh_private_.param("origin_y", origin_y_, origin_y_);
+  nh_private_.param("origin_z", origin_z_, origin_z_);
+  nh_private_.param("nx", nx_, nx_);
+  nh_private_.param("ny", ny_, ny_);
+  nh_private_.param("nz", nz_, nz_);
+  nh_private_.param("dx", dx_, dx_);
+  nh_private_.param("frame_id", frame_id_, frame_id_);
 
   if (update_esdf_every_n_sec > 0.0) {
     update_esdf_timer_ =
@@ -215,22 +233,18 @@ void EsdfServer::publishMap(bool reset_remote_map) {
 }
 
 void EsdfServer::publishSdArray() {
-  int nx = 10;
-  int ny = 10;
-  int nz = 10;
-  double dx = 0.2;
   Eigen::Vector3d p_world;
-  p_world << -2.0, -2.0, 0.3;
+  p_world << origin_x_, origin_y_, origin_z_;
 
   std_msgs::Float32MultiArray arr;
-  arr.data.resize(nx*ny*nz);
+  arr.data.resize(nx_*ny_*nz_);
 
-  for(size_t i=0; i<nx; i++){
-    for(size_t j=0; j<ny; j++){
-      for(size_t k=0; k<nz; k++){
-        int idx = i * (ny * nz) + j * nz + k;
+  for(size_t i=0; i<nx_; i++){
+    for(size_t j=0; j<ny_; j++){
+      for(size_t k=0; k<nz_; k++){
+        int idx = i * (ny_ * nz_) + j * nz_ + k;
         Eigen::Vector3d p_grid;
-        p_grid << p_world(0) + dx * i, p_world(1) + dx * j, p_world(2) + dx * k;
+        p_grid << p_world(0) + dx_ * i, p_world(1) + dx_ * j, p_world(2) + dx_ * k;
         double dist;
         bool success = esdf_map_->getDistanceAtPosition(p_grid, &dist);
         arr.data[idx] = dist;

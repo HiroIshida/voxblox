@@ -117,6 +117,17 @@ class EsdfServer : public TsdfServer {
   bool incremental_update_;
   int num_subscribers_esdf_map_;
 
+  float origin_x_;
+  float origin_y_;
+  float origin_z_;
+  float nx_;
+  float ny_;
+  float nz_;
+  float dx_;
+  std::string frame_id_;
+
+
+
   // ESDF maps.
   std::shared_ptr<EsdfMap> esdf_map_;
   std::unique_ptr<EsdfIntegrator> esdf_integrator_;
