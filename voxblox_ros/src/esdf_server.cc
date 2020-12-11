@@ -52,6 +52,9 @@ void EsdfServer::setupRos() {
   esdf_map_pub_ =
       nh_private_.advertise<voxblox_msgs::Layer>("esdf_map_out", 1, false);
 
+  compute_sighed_distance_srv_ = nh_private_.advertiseService(
+      "compute_sd", &EsdfServer::computeSignedDistanceCallback, this);
+
   // Set up subscriber.
   esdf_map_sub_ = nh_private_.subscribe("esdf_map_in", 1,
                                         &EsdfServer::esdfMapCallback, this);
