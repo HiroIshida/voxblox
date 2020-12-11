@@ -1,5 +1,6 @@
+#include <std_msgs/Float32MultiArray.h>
+#include <std_msgs/String.h>
 #include <geometry_msgs/PointStamped.h>
-
 #include "voxblox_ros/esdf_server.h"
 #include "voxblox_ros/conversions.h"
 #include "voxblox_ros/ros_params.h"
@@ -52,6 +53,9 @@ void EsdfServer::setupRos() {
   esdf_map_pub_ =
       nh_private_.advertise<voxblox_msgs::Layer>("esdf_map_out", 1, false);
 
+  sd_array_pub_ = 
+      nh_private_.advertise<std_msgs::Float32MultiArray>("sd_array", 1, false);
+
   compute_sighed_distance_srv_ = nh_private_.advertiseService(
       "compute_sd", &EsdfServer::computeSignedDistanceCallback, this);
 
@@ -91,6 +95,7 @@ void EsdfServer::publishAllUpdatedEsdfVoxels() {
 
   pointcloud.header.frame_id = world_frame_;
   esdf_pointcloud_pub_.publish(pointcloud);
+  publishSdArray();
 }
 
 void EsdfServer::publishSlices() {
@@ -137,15 +142,18 @@ bool EsdfServer::computeSignedDistanceCallback(voxblox_msgs::SignedDistance::Req
       &transform);
   Eigen::Vector3f p_; 
   p_ << pt_stamped_msg.point.x, pt_stamped_msg.point.y, pt_stamped_msg.point.z;
-  const auto p_world = transform.transform(p_).cast<double>();
+  //const auto p_world = transform.transform(p_).cast<double>();
+  Eigen::Vector3d p_world;
+  p_world << -2.0, -2.0, 0.3;
 
   for(size_t i=0; i<nx; i++){
     for(size_t j=0; j<ny; j++){
       for(size_t k=0; k<nz; k++){
         int idx = i * (ny * nz) + j * nz + k;
-        auto p_grid = p_world;
+        Eigen::Vector3d p_grid;
+        p_grid << p_world(0) + dx * i, p_world(1) + dx * j, p_world(2) + dx * k;
         double dist;
-        esdf_map_->getDistanceAtPosition(p_grid, &dist);
+        bool success = esdf_map_->getDistanceAtPosition(p_grid, &dist);
         response.data.push_back(dist);
 
       }
@@ -204,6 +212,32 @@ void EsdfServer::publishMap(bool reset_remote_map) {
   }
   num_subscribers_esdf_map_ = subscribers;
   TsdfServer::publishMap();
+}
+
+void EsdfServer::publishSdArray() {
+  int nx = 10;
+  int ny = 10;
+  int nz = 10;
+  double dx = 0.2;
+  Eigen::Vector3d p_world;
+  p_world << -2.0, -2.0, 0.3;
+
+  std_msgs::Float32MultiArray arr;
+  arr.data.resize(nx*ny*nz);
+
+  for(size_t i=0; i<nx; i++){
+    for(size_t j=0; j<ny; j++){
+      for(size_t k=0; k<nz; k++){
+        int idx = i * (ny * nz) + j * nz + k;
+        Eigen::Vector3d p_grid;
+        p_grid << p_world(0) + dx * i, p_world(1) + dx * j, p_world(2) + dx * k;
+        double dist;
+        bool success = esdf_map_->getDistanceAtPosition(p_grid, &dist);
+        arr.data[idx] = dist;
+      }
+    }
+  }
+  sd_array_pub_.publish(arr);
 }
 
 bool EsdfServer::saveMap(const std::string& file_path) {

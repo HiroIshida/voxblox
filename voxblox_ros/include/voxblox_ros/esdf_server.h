@@ -40,6 +40,7 @@ class EsdfServer : public TsdfServer {
   virtual void publishPointclouds();
   virtual void newPoseCallback(const Transformation& T_G_C);
   virtual void publishMap(bool reset_remote_map = false);
+  virtual void publishSdArray();
   virtual bool saveMap(const std::string& file_path);
   virtual bool loadMap(const std::string& file_path);
 
@@ -90,6 +91,8 @@ class EsdfServer : public TsdfServer {
 
   /// Publish the complete map for other nodes to consume.
   ros::Publisher esdf_map_pub_;
+
+  ros::Publisher sd_array_pub_;
 
   /// Subscriber to subscribe to another node generating the map.
   ros::Subscriber esdf_map_sub_;
