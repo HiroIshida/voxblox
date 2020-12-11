@@ -1,6 +1,3 @@
-#include <std_msgs/Float32MultiArray.h>
-#include <std_msgs/String.h>
-#include <geometry_msgs/PointStamped.h>
 #include "voxblox_ros/esdf_server.h"
 #include "voxblox_ros/conversions.h"
 #include "voxblox_ros/ros_params.h"
@@ -62,7 +59,7 @@ void EsdfServer::setupRos() {
       nh_private_.advertise<voxblox_msgs::Layer>("esdf_map_out", 1, false);
 
   sd_array_pub_ = 
-      nh_private_.advertise<std_msgs::Float32MultiArray>("sd_array", 1, false);
+      nh_private_.advertise<voxblox_msgs::SignedDistanceField>("sd_array", 1, false);
 
   compute_sighed_distance_srv_ = nh_private_.advertiseService(
       "compute_sd", &EsdfServer::computeSignedDistanceCallback, this);
@@ -236,8 +233,22 @@ void EsdfServer::publishSdArray() {
   Eigen::Vector3d p_world;
   p_world << origin_x_, origin_y_, origin_z_;
 
-  std_msgs::Float32MultiArray arr;
-  arr.data.resize(nx_*ny_*nz_);
+  voxblox_msgs::SignedDistanceField sdf_msg;
+
+  // fill message field
+  sdf_msg.frame_id = frame_id_;
+
+  sdf_msg.nx = nx_;
+  sdf_msg.ny = ny_;
+  sdf_msg.nz = nz_;
+
+  sdf_msg.dx = dx_;
+
+  sdf_msg.origin.x = origin_x_;
+  sdf_msg.origin.y = origin_y_;
+  sdf_msg.origin.z = origin_z_;
+
+  sdf_msg.data.resize(nx_*ny_*nz_);
 
   for(size_t i=0; i<nx_; i++){
     for(size_t j=0; j<ny_; j++){
@@ -247,11 +258,12 @@ void EsdfServer::publishSdArray() {
         p_grid << p_world(0) + dx_ * i, p_world(1) + dx_ * j, p_world(2) + dx_ * k;
         double dist;
         bool success = esdf_map_->getDistanceAtPosition(p_grid, &dist);
-        arr.data[idx] = dist;
+        sdf_msg.data[idx] = dist;
       }
     }
   }
-  sd_array_pub_.publish(arr);
+
+  sd_array_pub_.publish(sdf_msg);
 }
 
 bool EsdfServer::saveMap(const std::string& file_path) {

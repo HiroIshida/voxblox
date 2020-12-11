@@ -7,7 +7,8 @@
 #include <voxblox/core/esdf_map.h>
 #include <voxblox/integrator/esdf_integrator.h>
 #include <voxblox_msgs/Layer.h>
-#include <voxblox_msgs/SignedDistance.h>
+#include <voxblox_msgs/SignedDistanceField.h>
+#include <voxblox_msgs/SignedDistance.h> // remove later 
 
 #include "voxblox_ros/tsdf_server.h"
 #include "voxblox_ros/transformer.h"
