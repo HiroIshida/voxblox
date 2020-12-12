@@ -125,7 +125,6 @@ class EsdfServer : public TsdfServer {
   float ny_;
   float nz_;
   float dx_;
-  std::string frame_id_;
 
 
 

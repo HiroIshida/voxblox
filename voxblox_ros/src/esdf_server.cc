@@ -34,7 +34,6 @@ EsdfServer::EsdfServer(const ros::NodeHandle& nh,
       ny_(20),
       nz_(20),
       dx_(0.2),
-      frame_id_(std::string("world_frame_")),
       transformer_(nh, nh_private) {
   // Set up map and integrator.
   esdf_map_.reset(new EsdfMap(esdf_config));
@@ -93,7 +92,6 @@ void EsdfServer::setupRos() {
   nh_private_.param("ny", ny_, ny_);
   nh_private_.param("nz", nz_, nz_);
   nh_private_.param("dx", dx_, dx_);
-  nh_private_.param("frame_id", frame_id_, frame_id_);
 
   if (update_esdf_every_n_sec > 0.0) {
     update_esdf_timer_ =
@@ -236,7 +234,7 @@ void EsdfServer::publishSdArray() {
   voxblox_msgs::SignedDistanceField sdf_msg;
 
   // fill message field
-  sdf_msg.frame_id = frame_id_;
+  sdf_msg.frame_id = world_frame_;
 
   sdf_msg.nx = nx_;
   sdf_msg.ny = ny_;
