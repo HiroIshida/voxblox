@@ -248,10 +248,10 @@ void EsdfServer::publishSdArray() {
 
   sdf_msg.data.resize(nx_*ny_*nz_);
 
-  for(size_t i=0; i<nx_; i++){
+  for(size_t k=0; k<nz_; k++){
     for(size_t j=0; j<ny_; j++){
-      for(size_t k=0; k<nz_; k++){
-        int idx = i * (ny_ * nz_) + j * nz_ + k;
+      for(size_t i=0; i<nx_; i++){
+        int idx = k * (ny_ * nx_) + j * nx_ + i;
         Eigen::Vector3d p_grid;
         p_grid << p_world(0) + dx_ * i, p_world(1) + dx_ * j, p_world(2) + dx_ * k;
         double dist;
