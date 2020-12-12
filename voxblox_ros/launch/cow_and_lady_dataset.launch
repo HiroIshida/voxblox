@@ -25,9 +25,14 @@
     <param name="mesh_filename" value="$(find voxblox_ros)/mesh_results/$(anon cow).ply" />
     <param name="publish_pointclouds" value="true" />
 
-    <param name="nx" value="5" />
-    <param name="ny" value="5" />
-    <param name="nz" value="5" />
+    <param name="orign_x" value="-3.0" />
+    <param name="orign_y" value="-3.0" />
+    <param name="orign_z" value="0.0" />
+
+    <param name="dx" value="0.1" />
+    <param name="nx" value="20" />
+    <param name="ny" value="20" />
+    <param name="nz" value="20" />
   </node>
 
 </launch>
